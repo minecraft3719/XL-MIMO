@@ -14,8 +14,6 @@ num_Channel = 10000; %num_Channel % num_train == 0
 
 Channel_mat_total = zeros(num_train,N);
 
-
-
 for j = 1:num_Channel/(num_sta*num_ffading)
 Channel_mat=zeros(num_train,N);
 Channel_near_mat=zeros(num_train,N);

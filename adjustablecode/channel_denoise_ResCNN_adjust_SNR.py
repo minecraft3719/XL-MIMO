@@ -86,7 +86,7 @@ model.summary()
 checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
 callbacks_list = [checkpoint]
 
-model.fit(x=H_noisy_in, y=H_true_out, epochs=1, batch_size=128, callbacks=callbacks_list, verbose=2, shuffle=True, validation_split=0.1)
+model.fit(x=H_noisy_in, y=H_true_out, epochs=500, batch_size=128, callbacks=callbacks_list, verbose=2, shuffle=True, validation_split=0.1)
 model.save(filepath,save_format='keras',overwrite=True)
 
 ############## testing set ##################
