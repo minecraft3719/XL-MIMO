@@ -3,6 +3,7 @@ from keras.models import Model, Sequential
 from tensorflow.keras.optimizers import SGD, Adam, RMSprop
 from keras.callbacks import ModelCheckpoint
 from keras.models import load_model
+from keras.callbacks import CSVLogger
 from numpy import *
 import numpy as np
 import h5py
@@ -86,7 +87,10 @@ model.summary()
 checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
 callbacks_list = [checkpoint]
 
-model.fit(x=H_noisy_in, y=H_true_out, epochs=500, batch_size=128, callbacks=callbacks_list, verbose=2, shuffle=True, validation_split=0.1)
+history_callback = model.fit(x=H_noisy_in, y=H_true_out, epochs=500, batch_size=128, callbacks=callbacks_list, verbose=2, shuffle=True, validation_split=0.1)
+loss_history = history_callback.history["loss"]
+numpy_loss_history = np.array(loss_history)
+np.savetxt("loss_history.txt", numpy_loss_history, delimiter=",")
 model.save(filepath,save_format='keras',overwrite=True)
 
 ############## testing set ##################
