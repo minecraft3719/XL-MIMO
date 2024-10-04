@@ -21,6 +21,7 @@ TRAINING:
        snr_max=20
        snr_increment=5
        snr_count = int((snr_max-snr_min)/snr_increment)"
+ - Sau khi train sẽ gen ra một file log lưu trữ loss thay đổi, và 1 file output testing nmse ở file train
 TESTING:
  - testing sẽ chỉ gen ra mẫu kênh truyền sử dụng 1 tham số đa đường cho Lf và Ln (giống với code gốc), thực hiện gen thông qua file "ChannelData_for_ResCNN.m"
  - Khi testing, sử dụng file "channel_denoise_ResCNN_test.py", thay đổi SNR giống với code training, output sẽ được save vào file csv nmseSummary.csv
