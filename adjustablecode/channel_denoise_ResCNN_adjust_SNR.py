@@ -3,13 +3,11 @@ from keras.models import Model, Sequential
 from tensorflow.keras.optimizers import SGD, Adam, RMSprop
 from keras.callbacks import ModelCheckpoint
 from keras.models import load_model
-from keras.callbacks import CSVLogger
 from numpy import *
 import time
 import numpy as np
 import h5py
 import os
-import chardet
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 import tensorflow as tf
 config = tf.compat.v1.ConfigProto()
@@ -28,9 +26,9 @@ snr_count = int((snr_max-snr_min)/snr_increment)
 
 
 ############## training set ##################
-data_num_train=10000
+data_num_train=100000
 ## load channel
-data1 = sio.loadmat('Channel_f10n10_Total_Model10000_256ANTS_10by200')
+data1 = sio.loadmat(r'C:\Users\s448126\Downloads\haison98\XL-MIMO\adjustablecode\Channel_f4n10_Total_Model100000_256ANTS_10by200.mat')
 channel = data1['Channel_mat_total']
 print("shape of channel model ",channel.shape)
 
@@ -79,7 +77,7 @@ x1 = Subtract()([inp, xn])
 model = Model(inputs=inp, outputs=xn)
 
 # checkpoint;
-filepath='ResCNN9_direct_f10n10_256ANTS_1Kby100data_20dB_200ep.hdf5'
+filepath='ResCNN9_direct_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras'
 
 adam=Adam(learning_rate=1e-3, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 model.compile(optimizer=adam, loss='mse')
@@ -88,21 +86,24 @@ model.summary()
 checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
 callbacks_list = [checkpoint]
 
-history_callback = model.fit(x=H_noisy_in, y=H_true_out, epochs=500, batch_size=128, callbacks=callbacks_list, verbose=2, shuffle=True, validation_split=0.1)
+history_callback = model.fit(x=H_noisy_in, y=H_true_out, epochs=200, batch_size=128, callbacks=
+                             
+                             , verbose=2, shuffle=True, validation_split=0.1)
 loss_history = history_callback.history["loss"]
 numpy_loss_history = np.array(loss_history)
 np.savetxt("loss_history.txt", numpy_loss_history, delimiter=",")
+
 model.save(filepath,save_format='keras',overwrite=True)
 
 ############## testing set ##################
 data_num_test=2000
 ## load channel
 
-data1 = sio.loadmat('Channel_f10n10_Total_Model10000_256ANTS_10by200')
+data1 = sio.loadmat(r'C:\Users\s448126\Downloads\haison98\XL-MIMO\adjustablecode\Channel_f4n10_Total_Model100000_256ANTS_10by200.mat')
 channel = data1['Channel_mat_total']
 
 # load model
-ResCNN2d = load_model('ResCNN9_direct_f10n10_256ANTS_1Kby100data_20dB_200ep.hdf5',compile="True")
+ResCNN2d = load_model('ResCNN9_direct_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras',compile="True")
 nmseSummary = zeros((snr_count + 1,3),dtype=float)
 count = 0
 for snr in range(snr_min,snr_max+snr_increment,snr_increment):
