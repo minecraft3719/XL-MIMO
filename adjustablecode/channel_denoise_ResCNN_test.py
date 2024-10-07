@@ -4,6 +4,7 @@ from tensorflow.keras.optimizers import SGD, Adam, RMSprop
 from keras.callbacks import ModelCheckpoint
 from keras.models import load_model
 from numpy import *
+import time
 import numpy as np
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -74,7 +75,9 @@ for snr in range (snr_min,snr_max+snr_increment,snr_increment):
     nmseSummary[count,6] = nmse1.sum()/(data_num_test)
     nmseSummary[count,7] = nmse2.sum()/(data_num_test)
     count=count+1
-print(nmseSummary)
+label = ['SNR','H_noise','H_decoded']
+nmseSummary_as_str = np.vstack((label,nmseSummary))
 print("nmseSummary out put size", nmseSummary.shape)
-np.savetxt('nmseSummary.csv', nmseSummary, delimiter=',', fmt='%s')
+print(nmseSummary_as_str)
+np.savetxt(time.strftime("%Y%m%d-%H%M%S")+'_nmseSummary_test.csv', nmseSummary_as_str, delimiter=',', fmt='%s')
 print(data_num_test,num_sta,num_ffading)

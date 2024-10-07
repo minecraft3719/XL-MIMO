@@ -5,6 +5,7 @@ from keras.callbacks import ModelCheckpoint
 from keras.models import load_model
 from keras.callbacks import CSVLogger
 from numpy import *
+import time
 import numpy as np
 import h5py
 import os
@@ -97,8 +98,8 @@ model.save(filepath,save_format='keras',overwrite=True)
 data_num_test=2000
 ## load channel
 
-data1 = sio.loadmat('Channel_f3n6_256ANTS_10by200')
-channel = data1['Channel_mat']
+data1 = sio.loadmat('Channel_f10n10_Total_Model10000_256ANTS_10by200')
+channel = data1['Channel_mat_total']
 
 # load model
 ResCNN2d = load_model('ResCNN9_direct_f10n10_256ANTS_1Kby100data_20dB_200ep.hdf5',compile="True")
@@ -132,4 +133,8 @@ for snr in range(snr_min,snr_max+snr_increment,snr_increment):
     nmseSummary[count,1] = nmse1.sum()/(data_num_test)
     nmseSummary[count,2] = nmse2.sum()/(data_num_test)
     count = count + 1
-print(nmseSummary)
+label = ['SNR','H_noise','H_decoded']
+nmseSummary_as_str = np.vstack((label,nmseSummary))
+print("nmseSummary out put size", nmseSummary.shape)
+print(nmseSummary_as_str)
+np.savetxt(time.strftime("%Y%m%d-%H%M%S")+'_nmseSummary_train.csv', nmseSummary_as_str, delimiter=',', fmt='%s')
