@@ -10,7 +10,7 @@ L_n=10; % maximum number of paths for near-field part
 num_sta=10;
 num_ffading=200;
 num_train=num_sta*num_ffading;
-num_Channel = 10000; %num_Channel % num_train == 0
+num_Channel = 100000; %num_Channel % num_train == 0
 
 Channel_mat_total = zeros(num_train,N);
 
