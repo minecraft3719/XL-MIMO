@@ -6,7 +6,6 @@ from keras.models import load_model
 from numpy import *
 import time
 import numpy as np
-import h5py
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 import tensorflow as tf
@@ -74,10 +73,10 @@ xn = BatchNormalization()(xn)
 xn = Conv2D(filters=output_dim, kernel_size=(K,K), padding='Same', activation='linear')(xn)
 x1 = Subtract()([inp, xn])
 
-model = Model(inputs=inp, outputs=xn)
+model = Model(inputs=inp, outputs=x1)
 
 # checkpoint;
-filepath='ResCNN9_direct_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras'
+filepath='ResCNN9_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras'
 
 adam=Adam(learning_rate=1e-3, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 model.compile(optimizer=adam, loss='mse')
@@ -86,8 +85,7 @@ model.summary()
 checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
 callbacks_list = [checkpoint]
 
-history_callback = model.fit(x=H_noisy_in, y=H_true_out, epochs=200, batch_size=128, callbacks=
-                             
+history_callback = model.fit(x=H_noisy_in, y=H_true_out, epochs=200, batch_size=128, callbacks=callbacks_list
                              , verbose=2, shuffle=True, validation_split=0.1)
 loss_history = history_callback.history["loss"]
 numpy_loss_history = np.array(loss_history)
@@ -103,7 +101,7 @@ data1 = sio.loadmat(r'C:\Users\s448126\Downloads\haison98\XL-MIMO\adjustablecode
 channel = data1['Channel_mat_total']
 
 # load model
-ResCNN2d = load_model('ResCNN9_direct_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras',compile="True")
+ResCNN2d = load_model('ResCNN9_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras',compile="True")
 nmseSummary = zeros((snr_count + 1,3),dtype=float)
 count = 0
 for snr in range(snr_min,snr_max+snr_increment,snr_increment):
