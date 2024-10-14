@@ -7,6 +7,7 @@ from numpy import *
 import time
 import numpy as np
 import os
+import sys
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 import tensorflow as tf
 config = tf.compat.v1.ConfigProto()
@@ -25,7 +26,7 @@ count = 0
 snr_count = int((snr_max-snr_min)/snr_increment)
 
 # load model
-ResCNN2d = load_model('ResCNN9_direct_f10n10_256ANTS_1Kby100data_20dB_200ep.keras',compile=False)
+ResCNN2d = load_model('mr_Son_training_result\ResCNN9_direct_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras',compile=False)
 ResCNN2d.summary()
 
 data1 = sio.loadmat('Channel_f10n10_Total_Model10000_256ANTS_10by200.mat')
@@ -75,9 +76,10 @@ for snr in range (snr_min,snr_max+snr_increment,snr_increment):
     nmseSummary[count,6] = nmse1.sum()/(data_num_test)
     nmseSummary[count,7] = nmse2.sum()/(data_num_test)
     count=count+1
-label = ['SNR','H_noise','H_decoded']
+label = ['num_sta','num_ffading','matrix_size','far_field','near_field','SNR','H_noise','H_decoded']
+print("size of matrix: ",sys.getsizeof(nmseSummary))
+print("nmseSummary out put size ", nmseSummary.shape)
 nmseSummary_as_str = np.vstack((label,nmseSummary))
-print("nmseSummary out put size", nmseSummary.shape)
 print(nmseSummary_as_str)
 np.savetxt(time.strftime("%Y%m%d-%H%M%S")+'_nmseSummary_test.csv', nmseSummary_as_str, delimiter=',', fmt='%s')
 print(data_num_test,num_sta,num_ffading)
