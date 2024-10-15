@@ -29,7 +29,7 @@ snr_count = int((snr_max-snr_min)/snr_increment)
 ResCNN2d = load_model('mr_Son_training_result\ResCNN9_direct_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras',compile=False)
 ResCNN2d.summary()
 
-data1 = sio.loadmat('Channel_f15n0_256ANTS_10by200.mat')
+data1 = sio.loadmat('Channel_f0n15_256ANTS_10by200.mat')
 channel = data1['Channel_mat']
 Lf = data1['Lf']
 Ln = data1['Ln']
