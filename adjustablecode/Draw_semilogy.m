@@ -1,7 +1,7 @@
 clc
 clear all
 close all
-loss = table2array(readtable('D:\XL-MIMO\adjustablecode\mr_Son_training_result\loss_history.txt'));
+loss = table2array(readtable('mr_Son_training_result\loss_history.txt'));
 
 figure(1)
 plot(loss)
