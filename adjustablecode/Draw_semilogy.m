@@ -10,7 +10,7 @@ ylabel("nmse loss",'FontSize',16)
 xlabel("epoch cycle",'FontSize',16)
 
 path_directory = ('D:\XL-MIMO\adjustablecode');
-plot_file = dir([path_directory '/20241014*.csv']);
+plot_file = dir([path_directory '/20241015*.csv']);
 
 figure(2)
 legend4plot = zeros(2,length(plot_file));
