@@ -22,12 +22,13 @@ snr_min=-10
 snr_max=20
 snr_increment=5
 snr_count = int((snr_max-snr_min)/snr_increment)
+snr = -10
 
 
 ############## training set ##################
-data_num_train=100000
+data_num_train=10000
 ## load channel
-data1 = sio.loadmat(r'channel_model\Channel_f4n10_Total_Model100000_256ANTS_10by200.mat')
+data1 = sio.loadmat(r'channel_model\Channel_f10n10_Total_Model10000_256ANTS_10by200.mat')
 channel = data1['Channel_mat_total']
 print("shape of channel model ",channel.shape)
 
@@ -37,12 +38,12 @@ P=10**(snr/10.0)
 for i in range(data_num_train):
     h = channel[i]
     H = np.reshape(h, (Nx,Ny))
-    H_true_out[data_num_train*count+i,:,:,0] = np.real(H)
-    H_true_out[data_num_train*count+i,:,:,1] = np.imag(H)
+    H_true_out[i,:,:,0] = np.real(H)
+    H_true_out[i,:,:,1] = np.imag(H)
     noise = 1 / np.sqrt(2) * np.random.randn(Nx,Ny) + 1j * 1 / np.sqrt(2) * np.random.randn(Nx,Ny)
     H_with_noisy = H + 1 / np.sqrt(P) * noise
-    H_noisy_in[data_num_train*count+i,:,:,0] = np.real(H_with_noisy)
-    H_noisy_in[data_num_train*count+i,:,:,1]= np.imag(H_with_noisy)
+    H_noisy_in[i,:,:,0] = np.real(H_with_noisy)
+    H_noisy_in[i,:,:,1]= np.imag(H_with_noisy)
 print(((H_noisy_in)**2).mean(),((H_true_out)**2).mean())
 print(H_noisy_in.shape,H_true_out.shape)
 
@@ -95,7 +96,7 @@ model.save(filepath,save_format='keras',overwrite=True)
 data_num_test=2000
 ## load channel
 
-data1 = sio.loadmat(r'channel_model\Channel_f4n10_Total_Model100000_256ANTS_10by200.mat')
+data1 = sio.loadmat(r'channel_model\Channel_f10n10_Total_Model10000_256ANTS_10by200.mat')
 channel = data1['Channel_mat_total']
 
 # load model
