@@ -26,16 +26,17 @@ count = 0
 snr_count = int((snr_max-snr_min)/snr_increment)
 
 # load model
-ResCNN2d = load_model('ResCNN9_direct_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras',compile=False)
+ResCNN2d = load_model(r'mr_Son_training_result_original\ResCNN9_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras',compile=False)
 ResCNN2d.summary()
 
-data1 = sio.loadmat('Channel_f3n0_256ANTS_10by200.mat')
-channel = data1['Channel_mat']
+data1 = sio.loadmat(r'channel_model\Channel_10000_f0n6_256ANTS_10by200.mat')
+channel = data1['Channel_mat_total']
 Lf = data1['Lf']
 Ln = data1['Ln']
 num_sta = int(data1['num_sta'][0][0])
 num_ffading = int(data1['num_ffading'][0][0])
-data_num_test=int(num_sta*num_ffading)
+num_Channel = int(data1['num_Channel'][0][0])
+data_num_test=num_Channel
 
 nmseSummary = zeros((snr_count+1,8),dtype=float)
 nmseSummary[:,0] = num_sta

@@ -18,7 +18,7 @@ xlabel("epoch cycle",'FontSize', 14, 'Interpreter','latex')
 % saveas(gcf, 'loss_training', 'pdf')
 hold off
 path_directory = ('.');
-plot_file = dir([path_directory '/20241016-deviation-farfield1*.csv']);
+plot_file = dir([path_directory '/20241021-105228_nmseSummary_test.csv']);
 
 figure(2)
 legend4plot = zeros(2,length(plot_file));
