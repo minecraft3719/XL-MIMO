@@ -27,7 +27,7 @@ snr_count = int((snr_max-snr_min)/snr_increment)
 ############## training set ##################
 data_num_train=100000
 ## load channel
-data1 = sio.loadmat(r'C:\Users\s448126\Downloads\haison98\XL-MIMO\adjustablecode\Channel_f4n10_Total_Model100000_256ANTS_10by200.mat')
+data1 = sio.loadmat(r'channel_model\Channel_f4n10_Total_Model100000_256ANTS_10by200.mat')
 channel = data1['Channel_mat_total']
 print("shape of channel model ",channel.shape)
 
@@ -83,7 +83,7 @@ model.summary()
 checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
 callbacks_list = [checkpoint]
 
-history_callback = model.fit(x=H_noisy_in, y=H_true_out, epochs=200, batch_size=128, callbacks=callbacks_list
+history_callback = model.fit(x=H_noisy_in, y=H_true_out, epochs=1, batch_size=128, callbacks=callbacks_list
                              , verbose=2, shuffle=True, validation_split=0.1)
 loss_history = history_callback.history["loss"]
 numpy_loss_history = np.array(loss_history)
@@ -95,7 +95,7 @@ model.save(filepath,save_format='keras',overwrite=True)
 data_num_test=2000
 ## load channel
 
-data1 = sio.loadmat(r'C:\Users\s448126\Downloads\haison98\XL-MIMO\adjustablecode\Channel_f4n10_Total_Model100000_256ANTS_10by200.mat')
+data1 = sio.loadmat(r'channel_model\Channel_f4n10_Total_Model100000_256ANTS_10by200.mat')
 channel = data1['Channel_mat_total']
 
 # load model
