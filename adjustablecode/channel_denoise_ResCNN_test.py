@@ -17,7 +17,7 @@ import scipy.io as sio
 N=256 # BS antennas
 snr_min=-10
 snr_max=20
-snr_increment=2
+snr_increment=5
 
 scale=1
 Nx = 16
@@ -26,7 +26,7 @@ count = 0
 snr_count = int((snr_max-snr_min)/snr_increment)
 
 # load model
-ResCNN2d = load_model(r'mr_Son_training_result_original\ResCNN9_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras',compile=False)
+ResCNN2d = load_model(r'mr_Son_training_result_original_mixed_SNR\ResCNN9_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras',compile=False)
 ResCNN2d.summary()
 
 data1 = sio.loadmat(r'channel_model\Channel_10000_f0n6_256ANTS_10by200.mat')

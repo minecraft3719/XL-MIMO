@@ -2,13 +2,13 @@ clc
 clear all
 close all
 loss_org = table2array(readtable('mr_Son_training_result_original\loss_history.txt'));
-loss = table2array(readtable('mr_Son_training_result\loss_history.txt'));
+loss = table2array(readtable('mr_Son_training_result_single_SNR\loss_history.txt'));
 
 figure(1)
 plot(loss_org,'-o', 'LineWidth', 1.5, 'MarkerSize', 7, 'MarkerFaceColor', "#FFFF00", 'MarkerIndices', 1:5:length(loss_org))
 hold on
 plot(loss,'-o', 'LineWidth', 1.5, 'MarkerSize', 7, 'MarkerFaceColor', "#FFFF00", 'MarkerIndices', 1:5:length(loss))
-legend("training loss overtime variance output","training loss overtime direct output",'Interpreter', 'latex', 'FontSize', 14, 'Edgecolor', 'white')
+legend("training loss overtime with multiple SNR","training loss overtime with single SNR",'Interpreter', 'latex', 'FontSize', 14, 'Edgecolor', 'white')
 
     
 ylabel("nmse loss",'FontSize', 14, 'Interpreter','latex')
@@ -18,7 +18,7 @@ xlabel("epoch cycle",'FontSize', 14, 'Interpreter','latex')
 % saveas(gcf, 'loss_training', 'pdf')
 hold off
 path_directory = ('.');
-plot_file = dir([path_directory '/20241021-105228_nmseSummary_test.csv']);
+plot_file = dir([path_directory '/20241021-150319*.csv']);
 
 figure(2)
 legend4plot = zeros(2,length(plot_file));
@@ -34,7 +34,7 @@ for i = 1:length(plot_file)
     hold on
 end
 hold on;
-    nmse_result_train = table2array(readtable('20241009-015033_nmseSummary_train.csv'));
+    nmse_result_train = table2array(readtable('mr_Son_training_result_single_SNR\20241021-170739_nmseSummary_train.csv'));
     semilogy(nmse_result_train(:,1),nmse_result_train(:,3),'-o', 'LineWidth', 1.5, 'MarkerSize', 7, 'MarkerFaceColor', "#FFFF00");
     Legend{i+1} = "train nmse line";
 grid minor;

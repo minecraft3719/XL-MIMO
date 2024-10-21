@@ -17,7 +17,6 @@ N=256 # BS antennas need to matching with matlab
 scale=1
 Nx = int(np.sqrt(N))
 Ny = Nx
-
 snr_min=-10
 snr_max=20
 snr_increment=5
