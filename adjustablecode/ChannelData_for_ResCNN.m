@@ -5,7 +5,7 @@ N=256; % BS antennas
 lamda=0.01;
 Anten_dis=lamda/2; % antenna space
 Anten_dis_norm=0.5; % normalized antenna space
-Lf=0; % maximum number of paths for far-field part
+Lf=1; % maximum number of paths for far-field part
 Ln=6; % maximum number of paths for near-field part
 num_sta=10;
 num_ffading=200;
@@ -55,5 +55,9 @@ Channel_far_mat=zeros(num_train,N);
     end
 end
 
-pathName = append("Channel_",num2str(num_Channel),"_f",num2str(Lf),"n",num2str(Ln),"_",num2str(N),"ANTS_",num2str(num_sta),"by",num2str(num_ffading));
-save([pathName],'Channel_mat_total',"Lf","Ln","num_sta","num_ffading","num_Channel","N")
+pathName = append("..\..\(output)XL-MIMO\matlab_channel\Channel_",num2str(num_Channel),"_f",num2str(Lf),"n",num2str(Ln),"_",num2str(N),"ANTS_",num2str(num_sta),"by",num2str(num_ffading));
+    if ~exist('..\..\(output)XL-MIMO\matlab_channel\', 'dir')
+       mkdir('..\..\(output)XL-MIMO\matlab_channel\')
+    end
+save([pathName],'Channel_mat_total',"Lf","Ln","num_sta","num_ffading","num_Channel","N");
+winopen("..\..\(output)XL-MIMO\matlab_channel\");

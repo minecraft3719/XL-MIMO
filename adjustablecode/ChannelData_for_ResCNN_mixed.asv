@@ -59,9 +59,8 @@ Channel_far_mat=zeros(num_train,N);
 end
 
 
-pathName = append("..\..\(output)XL-MIMO\matlab_channel\Channel_f",num2str(L_f),"n",num2str(L_n),"_Total_Model",num2str(num_Channel),"_",num2str(N),"ANTS_",num2str(num_sta),"by",num2str(num_ffading));
+pathName = append("..\..\(output)XL-MIMO\matlab_channel\Channel_f",num2str(Lf),"n",num2str(Ln),"_Total_Model",num2str(num_Channel),"_",num2str(N),"ANTS_",num2str(num_sta),"by",num2str(num_ffading));
     if ~exist('..\..\(output)XL-MIMO\matlab_channel\', 'dir')
        mkdir('..\..\(output)XL-MIMO\matlab_channel\')
     end
 save([pathName],'Channel_mat_total',"num_Channel")
-winopen("..\..\(output)XL-MIMO\matlab_channel\");
