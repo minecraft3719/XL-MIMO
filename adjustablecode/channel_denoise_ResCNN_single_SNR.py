@@ -18,23 +18,28 @@ scale=1
 Nx = int(np.sqrt(N))
 Ny = Nx
 
-snr_min=-10
-snr_max=20
-snr_increment=5
-snr_count = int((snr_max-snr_min)/snr_increment)
-snr = -10
+snr = 10
 
 
 ############## training set ##################
-data_num_train=10000
+train_dir = r'../../(output)XL-MIMO'
+model_dir = train_dir + r'/matlab_channel/model_input_python/'
+if not os.path.isdir(model_dir):
+    os.mkdir(model_dir)
+model_file = r'Channel_f10n10_Total_Model100000_256ANTS_10by200.mat'
+print("Channel model location: ", model_dir + model_file)
+
 ## load channel
-data1 = sio.loadmat(r'channel_model\Channel_f10n10_Total_Model10000_256ANTS_10by200.mat')
+data1 = sio.loadmat(model_dir + model_file)
 channel = data1['Channel_mat_total']
+data_num_train=int(data1['num_Channel'][0][0])
 print("shape of channel model ",channel.shape)
 
 H_noisy_in = zeros((data_num_train,Nx,Ny,2), dtype=float)
 H_true_out = zeros((data_num_train,Nx,Ny,2), dtype=float)
 P=10**(snr/10.0)
+
+print('Generate noisy channel at snr = ', snr)
 for i in range(data_num_train):
     h = channel[i]
     H = np.reshape(h, (Nx,Ny))
@@ -75,7 +80,11 @@ x1 = Subtract()([inp, xn])
 model = Model(inputs=inp, outputs=x1)
 
 # checkpoint;
-filepath='ResCNN9_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras'
+if not os.path.isdir(train_dir + r'/keras_model/'):
+    os.mkdir(train_dir + r'/keras_model/')
+filepath = train_dir + r'/keras_model/ResCNN9_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras'
+#filepath = 'ResCNN9_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras'
+print('model checkpoint location: ', filepath)
 
 adam=Adam(learning_rate=1e-3, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 model.compile(optimizer=adam, loss='mse')
@@ -86,21 +95,29 @@ callbacks_list = [checkpoint]
 
 history_callback = model.fit(x=H_noisy_in, y=H_true_out, epochs=1, batch_size=128, callbacks=callbacks_list
                              , verbose=2, shuffle=True, validation_split=0.1)
+
 loss_history = history_callback.history["loss"]
 numpy_loss_history = np.array(loss_history)
-np.savetxt("loss_history.txt", numpy_loss_history, delimiter=",")
+np.savetxt(train_dir + r"/keras_model/loss_history.txt", numpy_loss_history, delimiter=",")
+print('model loss log location: ', train_dir , r"/keras_model/loss_history.txt")
 
 model.save(filepath,save_format='keras',overwrite=True)
 
 ############## testing set ##################
+snr_min=-10
+snr_max=20
+snr_increment=5
+snr_count = int((snr_max-snr_min)/snr_increment)
 data_num_test=2000
 ## load channel
 
-data1 = sio.loadmat(r'channel_model\Channel_f10n10_Total_Model10000_256ANTS_10by200.mat')
+## load channel
+#test_dir = train_dir+'/matlab_channel/model_input_python/'
+data1 = sio.loadmat(model_dir + model_file) ##use train data for testing
 channel = data1['Channel_mat_total']
 
 # load model
-ResCNN2d = load_model('ResCNN9_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras',compile="True")
+ResCNN2d = load_model(filepath,compile="True")
 nmseSummary = zeros((snr_count + 1,3),dtype=float)
 count = 0
 for snr in range(snr_min,snr_max+snr_increment,snr_increment):
@@ -135,4 +152,9 @@ label = ['SNR','H_noise','H_decoded']
 nmseSummary_as_str = np.vstack((label,nmseSummary))
 print("nmseSummary out put size", nmseSummary.shape)
 print(nmseSummary_as_str)
-np.savetxt(time.strftime("%Y%m%d-%H%M%S")+'_nmseSummary_train.csv', nmseSummary_as_str, delimiter=',', fmt='%s')
+
+if not os.path.isdir(train_dir+"/nmse_output/"):
+    os.mkdir(train_dir+"/nmse_output/")
+np.savetxt(train_dir+"/nmse_output/"+time.strftime("%Y%m%d-%H%M%S")+'_nmseSummary_train.csv', nmseSummary_as_str, delimiter=',', fmt='%s')
+
+print("nmse output location/",train_dir,"/nmse_output/")

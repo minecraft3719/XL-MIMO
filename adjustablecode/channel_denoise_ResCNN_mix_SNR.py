@@ -26,13 +26,11 @@ snr_count_train = int((snr_max_train-snr_min_train)/snr_increment_train)
 
 ############## training set ##################
 train_dir = r'../../(output)XL-MIMO'
-
-
 model_dir = train_dir + r'/matlab_channel/model_input_python/'
 if not os.path.isdir(model_dir):
     os.mkdir(model_dir)
 model_file = r'Channel_f10n10_Total_Model100000_256ANTS_10by200.mat'
-
+print("Channel model location: ", model_dir + model_file)
 
 ## load channel
 data1 = sio.loadmat(model_dir + model_file)
@@ -90,7 +88,7 @@ if not os.path.isdir(train_dir + r'/keras_model/'):
     os.mkdir(train_dir + r'/keras_model/')
 filepath = train_dir + r'/keras_model/ResCNN9_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras'
 #filepath = 'ResCNN9_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras'
-print('model check point location: ', filepath)
+print('model checkpoint location: ', filepath)
 
 
 adam=Adam(learning_rate=1e-3, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
@@ -106,6 +104,7 @@ history_callback = model.fit(x=H_noisy_in, y=H_true_out, epochs=1, batch_size=12
 loss_history = history_callback.history["loss"]
 numpy_loss_history = np.array(loss_history)
 np.savetxt(train_dir + r"/keras_model/loss_history.txt", numpy_loss_history, delimiter=",")
+print('model loss log location: ', train_dir , r"/keras_model/loss_history.txt")
 
 model.save(filepath,save_format='keras',overwrite=True)
 
@@ -114,13 +113,13 @@ model.save(filepath,save_format='keras',overwrite=True)
 ############## testing set ##################
 data_num_test=2000
 ## load channel
-test_dir = train_dir+'/matlab_channel/model_input_python/'
+#test_dir = train_dir+'/matlab_channel/model_input_python/'
+data1 = sio.loadmat(model_dir + model_file) ##use train data for testing
 
-data1 = sio.loadmat(test_dir+'Channel_f10n10_Total_Model100000_256ANTS_10by200.mat')
 channel = data1['Channel_mat_total']
 
 # load model
-ResCNN2d = load_model(train_dir+'/keras_model/ResCNN9_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras',compile="True")
+ResCNN2d = load_model(filepath,compile="True")
 
 
 snr_min=-10
@@ -166,4 +165,5 @@ if not os.path.isdir(train_dir+"/nmse_output/"):
     os.mkdir(train_dir+"/nmse_output/")
 np.savetxt(train_dir+"/nmse_output/"+time.strftime("%Y%m%d-%H%M%S")+'_nmseSummary_train.csv', nmseSummary_as_str, delimiter=',', fmt='%s')
 
+print("nmse output location/",train_dir,"/nmse_output/")
 #subprocess.Popen(train_dir+'/nmse_output/') ### return access denied
