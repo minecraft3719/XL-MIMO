@@ -19,18 +19,23 @@ scale=1
 Nx = int(np.sqrt(N))
 Ny = Nx
 snr_min_train=10
-snr_max_train=30
+snr_max_train=15
 snr_increment_train=5
 snr_count_train = int((snr_max_train-snr_min_train)/snr_increment_train)
 
 
 ############## training set ##################
-train_dir = '../../(output)XL-MIMO'
-if not os.path.isdir(train_dir+'/matlab_channel/model_input_python/'):
-    os.mkdir(train_dir+'/matlab_channel/model_input_python/')
+train_dir = r'../../(output)XL-MIMO'
+
+
+model_dir = train_dir + r'/matlab_channel/model_input_python/'
+if not os.path.isdir(model_dir):
+    os.mkdir(model_dir)
+model_file = r'Channel_f10n10_Total_Model100000_256ANTS_10by200.mat'
+
 
 ## load channel
-data1 = sio.loadmat(train_dir+'/matlab_channel/model_input_python/Channel_f10n10_Total_Model100000_256ANTS_10by200.mat')
+data1 = sio.loadmat(model_dir + model_file)
 channel = data1['Channel_mat_total']
 data_num_train=int(data1['num_Channel'][0][0])
 print("shape of channel model ",channel.shape)
@@ -81,9 +86,11 @@ x1 = Subtract()([inp, xn])
 model = Model(inputs=inp, outputs=x1)
 
 # checkpoint;
-if not os.path.isdir(train_dir+'/keras_model/'):
-    os.mkdir(train_dir+'/keras_model/')
-filepath = train_dir+'/keras_model/ResCNN9_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras'
+if not os.path.isdir(train_dir + r'/keras_model/'):
+    os.mkdir(train_dir + r'/keras_model/')
+filepath = train_dir + r'/keras_model/ResCNN9_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras'
+#filepath = 'ResCNN9_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras'
+print('model check point location: ', filepath)
 
 
 adam=Adam(learning_rate=1e-3, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
@@ -95,12 +102,14 @@ callbacks_list = [checkpoint]
 
 history_callback = model.fit(x=H_noisy_in, y=H_true_out, epochs=1, batch_size=128, callbacks=callbacks_list
                              , verbose=2, shuffle=True, validation_split=0.1)
-subprocess.Popen(train_dir+'/keras_model/')
+
 loss_history = history_callback.history["loss"]
 numpy_loss_history = np.array(loss_history)
-np.savetxt(train_dir+"/keras_model/loss_history.txt", numpy_loss_history, delimiter=",")
+np.savetxt(train_dir + r"/keras_model/loss_history.txt", numpy_loss_history, delimiter=",")
 
 model.save(filepath,save_format='keras',overwrite=True)
+
+#subprocess.Popen(filepath) ### return access denied
 
 ############## testing set ##################
 data_num_test=2000
@@ -156,4 +165,5 @@ print(nmseSummary_as_str)
 if not os.path.isdir(train_dir+"/nmse_output/"):
     os.mkdir(train_dir+"/nmse_output/")
 np.savetxt(train_dir+"/nmse_output/"+time.strftime("%Y%m%d-%H%M%S")+'_nmseSummary_train.csv', nmseSummary_as_str, delimiter=',', fmt='%s')
-subprocess.Popen(train_dir+'/nmse_output/')
+
+#subprocess.Popen(train_dir+'/nmse_output/') ### return access denied
