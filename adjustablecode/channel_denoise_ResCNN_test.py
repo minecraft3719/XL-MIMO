@@ -26,10 +26,15 @@ count = 0
 snr_count = int((snr_max-snr_min)/snr_increment)
 
 # load model
-ResCNN2d = load_model(r'mr_Son_training_result_original_mixed_SNR\ResCNN9_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras',compile=False)
+train_dir = r'../../(output)XL-MIMO'
+model_dir = train_dir + r'/matlab_channel/model_input_python/'
+model_file = r'Channel_f4n10_Total_Model100000_256ANTS_10by200.mat'
+
+keras_model = train_dir + r'/mr_Son_training_result_single_SNR/ResCNN9_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras'
+ResCNN2d = load_model(keras_model,compile="True")
 ResCNN2d.summary()
 
-data1 = sio.loadmat(r'channel_model\Channel_10000_f0n6_256ANTS_10by200.mat')
+data1 = sio.loadmat(model_file)
 channel = data1['Channel_mat_total']
 Lf = data1['Lf']
 Ln = data1['Ln']
@@ -82,5 +87,7 @@ print("size of matrix: ",sys.getsizeof(nmseSummary))
 print("nmseSummary out put size ", nmseSummary.shape)
 nmseSummary_as_str = np.vstack((label,nmseSummary))
 print(nmseSummary_as_str)
-np.savetxt(time.strftime("%Y%m%d-%H%M%S")+'_nmseSummary_test.csv', nmseSummary_as_str, delimiter=',', fmt='%s')
+
+np.savetxt(train_dir+"/nmse_output/"+time.strftime("%Y%m%d-%H%M%S")+'_nmseSummary_test.csv', nmseSummary_as_str, delimiter=',', fmt='%s')
 print(data_num_test,num_sta,num_ffading)
+print("nmse output location/",train_dir,"/nmse_output/")
