@@ -27,32 +27,24 @@ nmse_10dB_test = cat(2,file_dir,'nmse_output\20241030-114504_nmseSummary_test.cs
 nmse_10dB_train = cat(2,file_dir,'mr_Son_training_result_single_SNR_10dB\20241021-170739_nmseSummary_train.csv');
 nmse_15dB_test = cat(2,file_dir,'nmse_output\20241030-113221_nmseSummary_test.csv');
 nmse_15dB_train = cat(2,file_dir,'mr_Son_training_result_single_SNR_15dB\20241029-124214_nmseSummary_train.csv');
-nmse_mixed_test = cat(2,file_dir,'mr_Son_training_result_original_mixed_SNR\20241021-153637_nmseSummary_test.csv');
-nmse_mixed_train = cat(2,file_dir,'mr_Son_training_result_original_mixed_SNR\20241009-015033_nmseSummary_train.csv');
+nmse_mixed_test = cat(2,file_dir,'nmse_output\20241030-113221_nmseSummary_test.csv');
+nmse_mixed_train = cat(2,file_dir,'mr_Son_training_result_single_SNR_15dB\20241029-124214_nmseSummary_train.csv');
 
-nmse_result_plot_mixed_SNR = table2array(readtable(nmse_mixed_test));
-semilogy(nmse_result_plot_mixed_SNR(:,6),nmse_result_plot_mixed_SNR(:,8),['-' all_marks{randi(length(all_marks))}], 'LineWidth', 1.5, 'MarkerSize', 7, 'MarkerFaceColor', "#FFFF00");
-Legend{1} = strcat("test with SNR mix ","Lf = ",int2str(nmse_result_plot_mixed_SNR(1,4)),"; Ln = ",int2str(nmse_result_plot_mixed_SNR(1,5)));
-hold on;
-nmse_result_train_mixed_SNR = table2array(readtable(nmse_mixed_train));
-semilogy(nmse_result_train_mixed_SNR(:,1),nmse_result_train_mixed_SNR(:,3),'-o', 'LineWidth', 1.5, 'MarkerSize', 7, 'MarkerFaceColor', "#FFFF00");
-Legend{2} = "train with SNR mix";
-hold on;
 nmse_result_plot_mixed_SNR = table2array(readtable(nmse_10dB_test));
 semilogy(nmse_result_plot_mixed_SNR(:,6),nmse_result_plot_mixed_SNR(:,8),['-' all_marks{randi(length(all_marks))}], 'LineWidth', 1.5, 'MarkerSize', 7, 'MarkerFaceColor', "#FFFF00");
-Legend{3} = strcat("test with SNR 10dB ","Lf = ",int2str(nmse_result_plot_mixed_SNR(1,4)),"; Ln = ",int2str(nmse_result_plot_mixed_SNR(1,5)));
+Legend{1} = strcat("test with SNR 10dB ","Lf = ",int2str(nmse_result_plot_mixed_SNR(1,4)),"; Ln = ",int2str(nmse_result_plot_mixed_SNR(1,5)));
 hold on;
 nmse_result_train_mixed_SNR = table2array(readtable(nmse_10dB_train));
 semilogy(nmse_result_train_mixed_SNR(:,1),nmse_result_train_mixed_SNR(:,3),'-o', 'LineWidth', 1.5, 'MarkerSize', 7, 'MarkerFaceColor', "#FFFF00");
-Legend{4} = "train with SNR 10dB";
+Legend{2} = "test with SNR 15dB";
 hold on;
 nmse_result_plot = table2array(readtable(nmse_15dB_test));
 semilogy(nmse_result_plot(:,6),nmse_result_plot(:,8),['-' all_marks{randi(length(all_marks))}], 'LineWidth', 1.5, 'MarkerSize', 7, 'MarkerFaceColor', "#FFFF00");
-Legend{5} = strcat("test with SNR 15dB","Lf = ",int2str(nmse_result_plot(1,4)),"; Ln = ",int2str(nmse_result_plot(1,5)));
+Legend{3} = strcat("test with SNR 15dB","Lf = ",int2str(nmse_result_plot(1,4)),"; Ln = ",int2str(nmse_result_plot(1,5)));
 hold on
 nmse_result_train = table2array(readtable(nmse_15dB_train));
 semilogy(nmse_result_train(:,1),nmse_result_train(:,3),'-o', 'LineWidth', 1.5, 'MarkerSize', 7, 'MarkerFaceColor', "#FFFF00");
-Legend{6} = "train with SNR 15dB";
+Legend{4} = "train with SNR 15dB";
 grid minor;
 xlabel('SNR','FontSize', 14, 'Interpreter','latex');
 ylabel('nmse','FontSize', 14, 'Interpreter','latex');

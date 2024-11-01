@@ -26,27 +26,43 @@ count = 0
 snr_count = int((snr_max-snr_min)/snr_increment)
 
 # load model
-train_dir = r'../../(output)XL-MIMO'
-model_dir = train_dir + r'/matlab_channel/model_input_python/'
-model_file = r'Channel_f4n10_Total_Model100000_256ANTS_10by200.mat'
+train_dir = r'..\..\(output)XL-MIMO'
+model_dir = train_dir + r'\matlab_channel\model_input_python'
+model_file = model_dir + r'\Channel_f4n10_Total_Model100000_256ANTS_10by200.mat'
 
-keras_model = train_dir + r'/mr_Son_training_result_single_SNR/ResCNN9_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras'
+keras_model = train_dir + r'\mr_Son_training_result_single_SNR_10dB\ResCNN9_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras'
+#keras_model = r'D:\(output)XL-MIMO\mr_Son_training_result_single_SNR_10dB\ResCNN9_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras'
 ResCNN2d = load_model(keras_model,compile="True")
 ResCNN2d.summary()
 
 data1 = sio.loadmat(model_file)
+
+
+# channel = data1['Channel_mat_total']
+# Lf = data1['Lf']
+# Ln = data1['Ln']
+# N = data1['N']
+# num_sta = int(data1['num_sta'][0][0])
+# num_ffading = int(data1['num_ffading'][0][0])
+# num_Channel = int(data1['num_Channel'][0][0])
+
+
 channel = data1['Channel_mat_total']
-Lf = data1['Lf']
-Ln = data1['Ln']
-num_sta = int(data1['num_sta'][0][0])
-num_ffading = int(data1['num_ffading'][0][0])
-num_Channel = int(data1['num_Channel'][0][0])
+Lf = 10
+Ln = 10
+N = 256
+num_sta = 10
+num_ffading = 200
+num_Channel = 100000
+
+
+
 data_num_test=num_Channel
 
 nmseSummary = zeros((snr_count+1,8),dtype=float)
 nmseSummary[:,0] = num_sta
 nmseSummary[:,1] = num_ffading
-nmseSummary[:,2] = data1['N']
+nmseSummary[:,2] = N
 nmseSummary[:,3] = Lf
 nmseSummary[:,4] = Ln
 
@@ -88,6 +104,6 @@ print("nmseSummary out put size ", nmseSummary.shape)
 nmseSummary_as_str = np.vstack((label,nmseSummary))
 print(nmseSummary_as_str)
 
-np.savetxt(train_dir+"/nmse_output/"+time.strftime("%Y%m%d-%H%M%S")+'_nmseSummary_test.csv', nmseSummary_as_str, delimiter=',', fmt='%s')
+np.savetxt(train_dir+'\\nmse_output\\'+time.strftime("%Y%m%d-%H%M%S")+'_nmseSummary_test.csv', nmseSummary_as_str, delimiter=',', fmt='%s')
 print(data_num_test,num_sta,num_ffading)
 print("nmse output location/",train_dir,"/nmse_output/")
