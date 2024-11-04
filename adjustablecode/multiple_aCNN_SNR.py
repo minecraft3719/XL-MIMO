@@ -99,9 +99,7 @@ xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn
 xn = UpSampling2D((encoding_dim,encoding_dim))(xn)
 xn = BatchNormalization()(xn)
 decoded = Conv2D(filters=output_dim, kernel_size=(K,K), padding='Same', activation='linear')(xn)
-
-
-x1 = Subtract()([inp, xn])
+x1 = Subtract()([inp, decoded])
 
 model = Model(inputs=inp, outputs=x1)
 
