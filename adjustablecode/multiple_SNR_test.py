@@ -31,7 +31,7 @@ snr_count = int((snr_max-snr_min)/snr_increment)
 train_dir = 'adjustablecode\(output)XL-MIMO'
 model_file = 'adjustablecode\(output)XL-MIMO\matlab_channel\model_input_python\Channel_f10n10_Total_Model10000_256ANTS_10by200.mat'
 
-keras_model = 'adjustablecode\(output)XL-MIMO\keras_model\ResCNN_f10n10_256ANTS_100kdata_200ep_mix_SNR_0_5_20.keras'
+keras_model = r'adjustablecode\(output)XL-MIMO\keras_model\DAE_ResCNN_more_layer_f10n10_256ANTS_100kdata_200ep_mix_SNR_0_5_20_wo_subtract.keras'
 ResCNN2d = load_model(keras_model,compile="True")
 ResCNN2d.summary()
 

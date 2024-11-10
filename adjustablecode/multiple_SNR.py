@@ -1,4 +1,4 @@
-from keras.layers import Input, Dense, Dropout, Conv1D, Conv2D, MaxPool2D, BatchNormalization, Add, Activation, Subtract, Flatten
+from keras.layers import Input, Dense, Dropout, Conv1D, Conv2D, Reshape, MaxPool2D, BatchNormalization, Add, Activation, Subtract, Flatten
 from keras.models import Model, Sequential
 from tensorflow.keras.optimizers import SGD, Adam, RMSprop
 from keras.callbacks import ModelCheckpoint
@@ -63,8 +63,32 @@ print(H_noisy_in.shape,H_true_out.shape)
 K=3
 input_dim = (Nx,Ny,2)
 output_dim = 2
+flattened_dim = Nx * Ny * 2  # Calculate flattened dimension
+
 inp = Input(shape=input_dim)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(inp)
+
+# Flatten input for MLP Autoencoder
+x = Flatten()(inp)
+
+# Encoder part (MLP layers)
+encoded = Dense(512, activation='relu')(x)
+encoded = BatchNormalization()(encoded)
+encoded = Dense(256, activation='relu')(encoded)
+encoded = BatchNormalization()(encoded)
+encoded = Dense(128, activation='relu')(encoded)
+encoded = BatchNormalization()(encoded)
+
+# Decoder part (MLP layers)
+decoded = Dense(256, activation='relu')(encoded)
+decoded = BatchNormalization()(decoded)
+decoded = Dense(512, activation='relu')(decoded)
+decoded = BatchNormalization()(decoded)
+decoded = Dense(flattened_dim, activation='linear')(decoded)
+
+# Reshape back to the original image shape
+decoded = Reshape(input_dim)(decoded)
+
+xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(decoded)
 xn = BatchNormalization()(xn)
 xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
 xn = BatchNormalization()(xn)
@@ -88,7 +112,7 @@ model = Model(inputs=inp, outputs=x1)
 # checkpoint;
 if not os.path.isdir(train_dir + r'/keras_model/'):
     os.mkdir(train_dir + r'/keras_model/')
-filepath = train_dir + r'/keras_model/ResCNN_f10n10_256ANTS_100kdata_200ep_mix_SNR_0_5_20.keras'
+filepath = train_dir + r'/keras_model/AE_ResCNN_f10n10_256ANTS_100kdata_200ep_mix_SNR_0_5_20.keras'
 print('model checkpoint location: ', filepath)
 
 
@@ -100,7 +124,7 @@ checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_
 callbacks_list = [checkpoint]
 
 history_callback = model.fit(x=H_noisy_in, y=H_true_out, epochs=200, batch_size=128, callbacks=callbacks_list
-                             , verbose=2, shuffle=True, validation_split=0.1)
+                             , verbose=1, shuffle=True, validation_split=0.1)
 
 loss_history = history_callback.history["loss"]
 numpy_loss_history = np.array(loss_history)

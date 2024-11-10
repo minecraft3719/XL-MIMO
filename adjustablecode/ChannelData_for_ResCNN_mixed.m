@@ -10,7 +10,7 @@ L_n=10; % maximum number of paths for near-field part
 num_sta=10;
 num_ffading=200;
 num_train=num_sta*num_ffading;
-num_Channel = 100000; %num_Channel % num_train == 0
+num_Channel = 10000; %num_Channel % num_train == 0
 Channel_mat_total = zeros(num_train,N);
 
 for j = 1:num_Channel/(num_sta*num_ffading)
@@ -58,9 +58,9 @@ Channel_far_mat=zeros(num_train,N);
 end
 
 
-pathName = append("..\..\(output)XL-MIMO\matlab_channel\Channel_f",num2str(L_f),"n",num2str(L_n),"_Total_Model",num2str(num_Channel),"_",num2str(N),"ANTS_",num2str(num_sta),"by",num2str(num_ffading));
-    if ~exist('..\..\(output)XL-MIMO\matlab_channel\', 'dir')
-       mkdir('..\..\(output)XL-MIMO\matlab_channel\')
+pathName = append("(output)XL-MIMO\matlab_channel\Channel_f",num2str(L_f),"n",num2str(L_n),"_Total_Model",num2str(num_Channel),"_",num2str(N),"ANTS_",num2str(num_sta),"by",num2str(num_ffading));
+    if ~exist('(output)XL-MIMO\matlab_channel\', 'dir')
+       mkdir('(output)XL-MIMO\matlab_channel\')
     end
 save([pathName],'Channel_mat_total',"num_Channel")
-winopen("..\..\(output)XL-MIMO\matlab_channel\");
+winopen("(output)XL-MIMO\matlab_channel\");
