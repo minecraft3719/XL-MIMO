@@ -1,4 +1,4 @@
-from keras.layers import Input, Dense, Dropout, Conv1D, Conv2D, MaxPool2D, BatchNormalization, Add, Activation, Subtract, Flatten
+from keras.layers import Input, Dense, Dropout, Conv1D, Conv2D, MaxPool2D, BatchNormalization, Add, Activation, Subtract, Flatten, LayerNormalization
 from keras.models import Model, Sequential
 from tensorflow.keras.optimizers import SGD, Adam, RMSprop
 from keras.callbacks import ModelCheckpoint
@@ -16,6 +16,35 @@ import scipy.io as sio
 
 np.random.seed(2808)
 
+# class TransformerBlock(tf.keras.layers.Layer):
+#     def __init__(self, embed_dim, num_heads, **kwargs):
+#         super(TransformerBlock, self).__init__(**kwargs)  # Accept additional arguments like 'name'
+#         self.embed_dim = embed_dim
+#         self.num_heads = num_heads
+#         self.attention = tf.keras.layers.MultiHeadAttention(num_heads=num_heads, key_dim=embed_dim)
+#         self.dense_proj = tf.keras.Sequential([
+#             Dense(embed_dim, activation="relu"),
+#             Dense(embed_dim),
+#         ])
+#         self.layernorm1 = LayerNormalization()
+#         self.layernorm2 = LayerNormalization()
+
+#     def call(self, inputs):
+#         # Attention expects a 3D input (batch_size, seq_len, embed_dim)
+#         attn_output = self.attention(inputs, inputs)  # Self-attention
+#         x = self.layernorm1(inputs + attn_output)
+#         proj_output = self.dense_proj(x)
+#         return self.layernorm2(x + proj_output)
+
+#     def get_config(self):
+#         # Return the configuration of the custom layer
+#         config = super(TransformerBlock, self).get_config()
+#         config.update({
+#             "embed_dim": self.embed_dim,
+#             "num_heads": self.num_heads,
+#         })
+#         return config
+    
 N=256 # BS antennas
 snr_min=-10
 snr_max=20
@@ -31,8 +60,10 @@ snr_count = int((snr_max-snr_min)/snr_increment)
 train_dir = 'adjustablecode\(output)XL-MIMO'
 model_file = 'adjustablecode\(output)XL-MIMO\matlab_channel\model_input_python\Channel_f10n10_Total_Model10000_256ANTS_10by200.mat'
 
-keras_model = r'adjustablecode\(output)XL-MIMO\keras_model\DAE_ResCNN_more_layer_f10n10_256ANTS_100kdata_200ep_mix_SNR_0_5_20_wo_subtract.keras'
+keras_model = r'adjustablecode\(output)XL-MIMO\keras_model\ResCNN9_f10n10_256ANTS_1Kby100kdata_20dB_200ep.keras'
+# ResCNN2d = load_model(keras_model,compile="True",custom_objects={"TransformerBlock": TransformerBlock})
 ResCNN2d = load_model(keras_model,compile="True")
+
 ResCNN2d.summary()
 
 data1 = sio.loadmat(model_file)

@@ -63,32 +63,39 @@ print(H_noisy_in.shape,H_true_out.shape)
 K=3
 input_dim = (Nx,Ny,2)
 output_dim = 2
-inp = Input(shape=input_dim)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(inp)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=output_dim, kernel_size=(K,K), padding='Same', activation='linear')(xn)
-x1 = Subtract()([inp, xn])
+flattened_dim = Nx * Ny * 2  # Calculate flattened dimension
 
-model = Model(inputs=inp, outputs=x1)
+inp = Input(shape=input_dim)
+
+# Flatten input for MLP Autoencoder
+x = Flatten()(inp)
+
+# Encoder part (MLP layers)
+encoded = Dense(512, activation='relu')(x)
+encoded = BatchNormalization()(encoded)
+encoded = Dense(256, activation='relu')(encoded)
+encoded = BatchNormalization()(encoded)
+encoded = Dense(128, activation='relu')(encoded)
+encoded = BatchNormalization()(encoded)
+
+# Decoder part (MLP layers)
+decoded = Dense(256, activation='relu')(encoded)
+decoded = BatchNormalization()(decoded)
+decoded = Dense(512, activation='relu')(decoded)
+decoded = BatchNormalization()(decoded)
+decoded = Dense(flattened_dim, activation='linear')(decoded)
+
+# Reshape back to the original image shape
+decoded = Reshape(input_dim)(decoded)
+
+# x1 = Subtract()([inp, decoded])
+
+model = Model(inputs=inp, outputs=decoded)
 
 # checkpoint;
 if not os.path.isdir(train_dir + r'/keras_model/'):
     os.mkdir(train_dir + r'/keras_model/')
-filepath = train_dir + r'/keras_model/AE_ResCNN_f10n10_256ANTS_100kdata_200ep_mix_SNR_0_5_20.keras'
+filepath = train_dir + r'/keras_model/AE_f10n10_256ANTS_100kdata_200ep_mix_SNR_0_5_20_wo_subtract.keras'
 print('model checkpoint location: ', filepath)
 
 
@@ -99,7 +106,7 @@ model.summary()
 checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
 callbacks_list = [checkpoint]
 
-history_callback = model.fit(x=H_noisy_in, y=H_true_out, epochs=200, batch_size=128, callbacks=callbacks_list
+history_callback = model.fit(x=H_noisy_in, y=H_true_out, epochs=100, batch_size=512, callbacks=callbacks_list
                              , verbose=1, shuffle=True, validation_split=0.1)
 
 loss_history = history_callback.history["loss"]

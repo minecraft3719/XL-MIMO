@@ -1,4 +1,4 @@
-from keras.layers import Input, Dense, Dropout, Conv1D, Conv2D, Reshape, MaxPool2D, BatchNormalization, Add, Activation, Subtract, Flatten
+from keras.layers import Input, Dense, Dropout, Conv1D, Conv2D, Reshape, MaxPool2D, BatchNormalization, Add, Activation, Subtract, Flatten, LayerNormalization
 from keras.models import Model, Sequential
 from tensorflow.keras.optimizers import SGD, Adam, RMSprop
 from keras.callbacks import ModelCheckpoint
@@ -59,37 +59,65 @@ for snr in range(snr_min_train,snr_max_train+snr_increment_train,snr_increment_t
 print(((H_noisy_in)**2).mean(),((H_true_out)**2).mean())
 print(H_noisy_in.shape,H_true_out.shape)
 
-## Build DNN model
-K=3
-input_dim = (Nx,Ny,2)
-output_dim = 2
-inp = Input(shape=input_dim)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(inp)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=output_dim, kernel_size=(K,K), padding='Same', activation='linear')(xn)
-x1 = Subtract()([inp, xn])
+class TransformerBlock(tf.keras.layers.Layer):
+    def __init__(self, embed_dim, num_heads):
+        super(TransformerBlock, self).__init__()
+        self.embed_dim = embed_dim
+        self.num_heads = num_heads
+        self.attention = tf.keras.layers.MultiHeadAttention(num_heads=num_heads, key_dim=embed_dim)
+        self.dense_proj = tf.keras.Sequential([
+            Dense(embed_dim, activation="relu"),
+            Dense(embed_dim),
+        ])
+        self.layernorm1 = LayerNormalization()
+        self.layernorm2 = LayerNormalization()
 
-model = Model(inputs=inp, outputs=x1)
+    def call(self, inputs):
+        # Attention expects a 3D input (batch_size, seq_len, embed_dim)
+        attn_output = self.attention(inputs, inputs)  # Self-attention
+        x = self.layernorm1(inputs + attn_output)
+        proj_output = self.dense_proj(x)
+        return self.layernorm2(x + proj_output)
+
+    def get_config(self):
+        # Return the configuration of the custom layer
+        config = super(TransformerBlock, self).get_config()
+        config.update({
+            "embed_dim": self.embed_dim,
+            "num_heads": self.num_heads,
+        })
+        return config
+
+# Example usage with the rest of your model:
+
+K = 3
+input_dim = (16, 16, 2)  # Input shape (height, width, channels)
+output_dim = 2
+embed_dim = 64  # Embedding dimension for transformer
+num_heads = 4  # Number of attention heads
+
+inp = Input(shape=input_dim)
+
+# Apply convolution and retain spatial dimensions
+x = Conv2D(embed_dim, (K, K), padding="same", activation="relu")(inp)
+
+# Transformer block
+transformer_block = TransformerBlock(embed_dim, num_heads)
+x = transformer_block(x)
+
+# Apply a 1x1 Conv to match output dimensions (16, 16, 2)
+x = Conv2D(output_dim, (1, 1), padding="same", activation="linear")(x)
+
+model = Model(inputs=inp, outputs=x)
+model.summary()
 
 # checkpoint;
 if not os.path.isdir(train_dir + r'/keras_model/'):
     os.mkdir(train_dir + r'/keras_model/')
-filepath = train_dir + r'/keras_model/AE_ResCNN_f10n10_256ANTS_100kdata_200ep_mix_SNR_0_5_20.keras'
+filename = 'ViT_f10n10_256ANTS_100kdata_200ep_mix_SNR_0_5_20'
+filepath = train_dir + r'/keras_model/' + filename + '.keras'
 print('model checkpoint location: ', filepath)
+
 
 
 adam=Adam(learning_rate=1e-3, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
@@ -99,13 +127,13 @@ model.summary()
 checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
 callbacks_list = [checkpoint]
 
-history_callback = model.fit(x=H_noisy_in, y=H_true_out, epochs=200, batch_size=128, callbacks=callbacks_list
+history_callback = model.fit(x=H_noisy_in, y=H_true_out, epochs=200, batch_size=512, callbacks=callbacks_list
                              , verbose=1, shuffle=True, validation_split=0.1)
 
 loss_history = history_callback.history["loss"]
 numpy_loss_history = np.array(loss_history)
-np.savetxt(train_dir + r"/keras_model/loss_history.txt", numpy_loss_history, delimiter=",")
-print('model loss log location: ', train_dir , r"/keras_model/loss_history.txt")
+np.savetxt(train_dir + r"/keras_model/" + filename + ".txt", numpy_loss_history, delimiter=",")
+print('model loss log location: ', train_dir , r"/keras_model/" + filename + ".keras")
 
 model.save(filepath,save_format='keras',overwrite=True)
 

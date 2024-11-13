@@ -1,4 +1,4 @@
-from keras.layers import Input, Dense, Dropout, Conv1D, Conv2D, Reshape, MaxPool2D, BatchNormalization, Add, Activation, Subtract, Flatten
+from keras.layers import Input, Dense, Dropout, Conv1D, Conv2D, Reshape, MaxPool2D, MaxPooling2D, Attention, UpSampling2D, BatchNormalization, Add, Activation, Subtract, Flatten, Conv2DTranspose, Concatenate
 from keras.models import Model, Sequential
 from tensorflow.keras.optimizers import SGD, Adam, RMSprop
 from keras.callbacks import ModelCheckpoint
@@ -60,35 +60,58 @@ print(((H_noisy_in)**2).mean(),((H_true_out)**2).mean())
 print(H_noisy_in.shape,H_true_out.shape)
 
 ## Build DNN model
-K=3
-input_dim = (Nx,Ny,2)
-output_dim = 2
-inp = Input(shape=input_dim)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(inp)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=output_dim, kernel_size=(K,K), padding='Same', activation='linear')(xn)
-x1 = Subtract()([inp, xn])
+# Residual Block with Attention Mechanism
+def residual_block_with_attention(x, filters, kernel_size=6):
+    # First Convolutional Layer
+    shortcut = x
+    x = Conv2D(filters, kernel_size, padding="same", activation="relu")(x)
+    x = BatchNormalization()(x)
+    
+    # Second Convolutional Layer
+    x = Conv2D(filters, kernel_size, padding="same")(x)
+    x = BatchNormalization()(x)
+    
+    # Attention Layer
+    attn = Attention()([x, x])
+    x = Add()([x, attn])  # Add attention-enhanced feature map
 
-model = Model(inputs=inp, outputs=x1)
+    # Residual Connection
+    x = Add()([x, shortcut])
+    x = Activation("relu")(x)
+    
+    return x
+
+# Model with Residual Blocks and Attention Mechanism
+def build_residual_attention_cnn(input_shape, output_dim, num_residual_blocks=5):
+    inp = Input(shape=input_shape)
+    x = inp
+    
+    # Initial Convolution
+    x = Conv2D(64, kernel_size=3, padding="same", activation="relu")(x)
+    x = BatchNormalization()(x)
+    
+    # Residual Blocks with Attention
+    for _ in range(num_residual_blocks):
+        x = residual_block_with_attention(x, 64)
+    
+    # Output Layer
+    x = Conv2D(output_dim, kernel_size=3, padding="same", activation="linear")(x)
+    output = Subtract()([inp, x])  # Residual addition for denoising
+    
+    model = Model(inputs=inp, outputs=output)
+    return model
+
+# Define model
+input_dim = (16, 16, 2)  # Nx, Ny, 2 (or customize based on your data)
+output_dim = 2
+model = build_residual_attention_cnn(input_dim, output_dim)
+model.summary()
 
 # checkpoint;
 if not os.path.isdir(train_dir + r'/keras_model/'):
     os.mkdir(train_dir + r'/keras_model/')
-filepath = train_dir + r'/keras_model/AE_ResCNN_f10n10_256ANTS_100kdata_200ep_mix_SNR_0_5_20.keras'
+filename = 'CNN_attention_subtract_3_f10n10_256ANTS_100kdata_100ep_mix_SNR_0_5_20'
+filepath = train_dir + r'/keras_model/' + filename + '.keras'
 print('model checkpoint location: ', filepath)
 
 
@@ -99,13 +122,13 @@ model.summary()
 checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
 callbacks_list = [checkpoint]
 
-history_callback = model.fit(x=H_noisy_in, y=H_true_out, epochs=200, batch_size=128, callbacks=callbacks_list
+history_callback = model.fit(x=H_noisy_in, y=H_true_out, epochs=200, batch_size=512, callbacks=callbacks_list
                              , verbose=1, shuffle=True, validation_split=0.1)
 
 loss_history = history_callback.history["loss"]
 numpy_loss_history = np.array(loss_history)
-np.savetxt(train_dir + r"/keras_model/loss_history.txt", numpy_loss_history, delimiter=",")
-print('model loss log location: ', train_dir , r"/keras_model/loss_history.txt")
+np.savetxt(train_dir + r"/keras_model/" + filename + ".txt", numpy_loss_history, delimiter=",")
+print('model loss log location: ', train_dir , r"/keras_model/" + filename + ".keras")
 
 model.save(filepath,save_format='keras',overwrite=True)
 

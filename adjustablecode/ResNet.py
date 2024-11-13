@@ -60,36 +60,47 @@ print(((H_noisy_in)**2).mean(),((H_true_out)**2).mean())
 print(H_noisy_in.shape,H_true_out.shape)
 
 ## Build DNN model
-K=3
-input_dim = (Nx,Ny,2)
+def residual_block(x, filters, kernel_size=3):
+    # Store the input to add later as a shortcut
+    shortcut = x
+    x = Conv2D(filters, kernel_size, padding="same", activation="relu")(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(filters, kernel_size, padding="same", activation="relu")(x)
+    x = BatchNormalization()(x)
+    # Add the shortcut to the output
+    x = Add()([x, shortcut])  
+    return x
+
+K = 3
+input_dim = (16, 16, 2)  # As specified in your initial configuration
 output_dim = 2
+
 inp = Input(shape=input_dim)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(inp)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=output_dim, kernel_size=(K,K), padding='Same', activation='linear')(xn)
-x1 = Subtract()([inp, xn])
+
+# Initial Conv layer
+x = Conv2D(64, (K, K), padding="same", activation="relu")(inp)
+x = BatchNormalization()(x)
+
+# Add residual blocks
+for _ in range(4):  # Create 4 residual blocks, can adjust the number as needed
+    x = residual_block(x, 64)
+
+# Final Conv layer to reduce output dimensions
+x = Conv2D(output_dim, (K, K), padding="same", activation="linear")(x)
+
+# Subtract the input from the output
+x1 = Subtract()([inp, x])
 
 model = Model(inputs=inp, outputs=x1)
+model.summary()
 
 # checkpoint;
 if not os.path.isdir(train_dir + r'/keras_model/'):
     os.mkdir(train_dir + r'/keras_model/')
-filepath = train_dir + r'/keras_model/AE_ResCNN_f10n10_256ANTS_100kdata_200ep_mix_SNR_0_5_20.keras'
+filename = 'ResNet_f10n10_256ANTS_100kdata_200ep_mix_SNR_0_5_20'
+filepath = train_dir + r'/keras_model/' + filename + '.keras'
 print('model checkpoint location: ', filepath)
+
 
 
 adam=Adam(learning_rate=1e-3, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
@@ -99,13 +110,13 @@ model.summary()
 checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
 callbacks_list = [checkpoint]
 
-history_callback = model.fit(x=H_noisy_in, y=H_true_out, epochs=200, batch_size=128, callbacks=callbacks_list
+history_callback = model.fit(x=H_noisy_in, y=H_true_out, epochs=200, batch_size=512, callbacks=callbacks_list
                              , verbose=1, shuffle=True, validation_split=0.1)
 
 loss_history = history_callback.history["loss"]
 numpy_loss_history = np.array(loss_history)
-np.savetxt(train_dir + r"/keras_model/loss_history.txt", numpy_loss_history, delimiter=",")
-print('model loss log location: ', train_dir , r"/keras_model/loss_history.txt")
+np.savetxt(train_dir + r"/keras_model/" + filename + ".txt", numpy_loss_history, delimiter=",")
+print('model loss log location: ', train_dir , r"/keras_model/" + filename + ".keras")
 
 model.save(filepath,save_format='keras',overwrite=True)
 

@@ -1,4 +1,4 @@
-from keras.layers import Input, Dense, Dropout, Conv1D, Conv2D, Reshape, MaxPool2D, BatchNormalization, Add, Activation, Subtract, Flatten
+from keras.layers import Input, Dense, Dropout, Conv1D, Conv2D, Reshape, MaxPool2D, MaxPooling2D, UpSampling2D, BatchNormalization, Add, Activation, Subtract, Flatten, Conv2DTranspose, Concatenate
 from keras.models import Model, Sequential
 from tensorflow.keras.optimizers import SGD, Adam, RMSprop
 from keras.callbacks import ModelCheckpoint
@@ -60,35 +60,64 @@ print(((H_noisy_in)**2).mean(),((H_true_out)**2).mean())
 print(H_noisy_in.shape,H_true_out.shape)
 
 ## Build DNN model
-K=3
-input_dim = (Nx,Ny,2)
+input_dim = (Nx, Ny, 2)
 output_dim = 2
-inp = Input(shape=input_dim)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(inp)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=64, kernel_size=(K,K), padding='Same', activation='relu')(xn)
-xn = BatchNormalization()(xn)
-xn = Conv2D(filters=output_dim, kernel_size=(K,K), padding='Same', activation='linear')(xn)
-x1 = Subtract()([inp, xn])
+K = 3  # Kernel size
 
-model = Model(inputs=inp, outputs=x1)
+inp = Input(shape=input_dim)
+
+# Encoding path
+c1 = Conv2D(64, (K, K), activation='relu', padding='same')(inp)
+c1 = BatchNormalization()(c1)
+c1 = Conv2D(64, (K, K), activation='relu', padding='same')(c1)
+c1 = BatchNormalization()(c1)
+p1 = MaxPooling2D((2, 2))(c1)
+
+c2 = Conv2D(128, (K, K), activation='relu', padding='same')(p1)
+c2 = BatchNormalization()(c2)
+c2 = Conv2D(128, (K, K), activation='relu', padding='same')(c2)
+c2 = BatchNormalization()(c2)
+p2 = MaxPooling2D((2, 2))(c2)
+
+# Bottleneck
+b1 = Conv2D(256, (K, K), activation='relu', padding='same')(p2)
+b1 = BatchNormalization()(b1)
+b1 = Conv2D(256, (K, K), activation='relu', padding='same')(b1)
+b1 = BatchNormalization()(b1)
+
+# Decoding path
+u1 = UpSampling2D((2, 2))(b1)
+
+# Adjust channel dimensions of c2 to match u1
+c2_adjusted = Conv2D(256, (1, 1), activation='relu', padding='same')(c2)
+m1 = Add()([u1, c2_adjusted])
+
+c3 = Conv2D(128, (K, K), activation='relu', padding='same')(m1)
+c3 = BatchNormalization()(c3)
+c3 = Conv2D(128, (K, K), activation='relu', padding='same')(c3)
+c3 = BatchNormalization()(c3)
+
+u2 = UpSampling2D((2, 2))(c3)
+
+# Adjust channel dimensions of c1 to match u2 if needed
+c1_adjusted = Conv2D(128, (1, 1), activation='relu', padding='same')(c1)
+m2 = Add()([u2, c1_adjusted])
+
+c4 = Conv2D(64, (K, K), activation='relu', padding='same')(m2)
+c4 = BatchNormalization()(c4)
+c4 = Conv2D(64, (K, K), activation='relu', padding='same')(c4)
+c4 = BatchNormalization()(c4)
+
+output = Conv2D(output_dim, (1, 1), activation='linear', padding='same')(c4)
+model = Model(inputs=inp, outputs=output)
+
+model.summary()
 
 # checkpoint;
 if not os.path.isdir(train_dir + r'/keras_model/'):
     os.mkdir(train_dir + r'/keras_model/')
-filepath = train_dir + r'/keras_model/AE_ResCNN_f10n10_256ANTS_100kdata_200ep_mix_SNR_0_5_20.keras'
+filename = 'UNet_1_f10n10_256ANTS_100kdata_100ep_mix_SNR_0_5_20'
+filepath = train_dir + r'/keras_model/' + filename + '.keras'
 print('model checkpoint location: ', filepath)
 
 
@@ -99,13 +128,13 @@ model.summary()
 checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
 callbacks_list = [checkpoint]
 
-history_callback = model.fit(x=H_noisy_in, y=H_true_out, epochs=200, batch_size=128, callbacks=callbacks_list
+history_callback = model.fit(x=H_noisy_in, y=H_true_out, epochs=200, batch_size=512, callbacks=callbacks_list
                              , verbose=1, shuffle=True, validation_split=0.1)
 
 loss_history = history_callback.history["loss"]
 numpy_loss_history = np.array(loss_history)
-np.savetxt(train_dir + r"/keras_model/loss_history.txt", numpy_loss_history, delimiter=",")
-print('model loss log location: ', train_dir , r"/keras_model/loss_history.txt")
+np.savetxt(train_dir + r"/keras_model/" + filename + ".txt", numpy_loss_history, delimiter=",")
+print('model loss log location: ', train_dir , r"/keras_model/" + filename + ".keras")
 
 model.save(filepath,save_format='keras',overwrite=True)
 
