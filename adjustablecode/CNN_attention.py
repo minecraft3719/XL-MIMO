@@ -61,7 +61,7 @@ print(H_noisy_in.shape,H_true_out.shape)
 
 ## Build DNN model
 # Residual Block with Attention Mechanism
-def residual_block_with_attention(x, filters, kernel_size=6):
+def residual_block_with_attention(x, filters, kernel_size=10):
     # First Convolutional Layer
     shortcut = x
     x = Conv2D(filters, kernel_size, padding="same", activation="relu")(x)
@@ -110,7 +110,7 @@ model.summary()
 # checkpoint;
 if not os.path.isdir(train_dir + r'/keras_model/'):
     os.mkdir(train_dir + r'/keras_model/')
-filename = 'CNN_attention_subtract_3_f10n10_256ANTS_100kdata_100ep_mix_SNR_0_5_20'
+filename = 'CNN_attention_subtract_4_f10n10_256ANTS_100kdata_100ep_mix_SNR_0_5_20'
 filepath = train_dir + r'/keras_model/' + filename + '.keras'
 print('model checkpoint location: ', filepath)
 
